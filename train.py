@@ -70,10 +70,13 @@ for i in range(configs):
 configErrorFunction = np.square((energies - dftEnergies)/energyWeight)
 errorFunction = np.sum(configErrorFunction)
 
-#print("Initial error function of individual configurations:")
-#print(configErrorFunction)
-print("Initial error function")
-print(errorFunction)
+lossFunction = np.sum(np.square(dftEnergies - energies))/configs
+print("Initial loss function")
+print(lossFunction)
+
+
+
+exit()
 
 oldErrorFunction = errorFunction
 bestErrorFunction = errorFunction
