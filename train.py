@@ -13,6 +13,20 @@ def morse(D,r0,gamma,r):
     energy = D*(chi**2 - 2*chi)
     return energy
 
+def derivativeMorseD(r0,gamma,r):
+    chi = np.exp(-gamma/2*((r/r0)-1))
+    derivativeEnergy = (chi**2 - 2*chi)
+    return derivativeEnergy
+
+def derivativeMorseGamma(D,r0,gamma,r):
+    chi = np.exp(-gamma/2*((r/r0)-1))
+    derivativeEnergy = D*((r/r0)-1)*(chi-chi**2)
+    return derivativeEnergy
+
+def derivativeMorseR0(D,r0,gamma,r):
+    chi = np.exp(-gamma/2*((r/r0)-1))
+    derivativeEnergy = (D*gamma*r/r0**2)*(chi**2 - chi)
+
 dataset = open("dataset.txt","r")
 
 configs = 13
@@ -73,6 +87,8 @@ errorFunction = np.sum(configErrorFunction)
 lossFunction = np.sum(np.square(dftEnergies - energies))/configs
 print("Initial loss function")
 print(lossFunction)
+
+# Stochastic gradient descent
 
 
 
