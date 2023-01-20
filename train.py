@@ -34,6 +34,8 @@ configs = 13
 optimizerNumberOfSteps = 5000
 energyWeight = 0.1  # the lower the value the more strict you want to be in fit                                
 
+learningRate = 0.01
+
 # energies must be in kcal/mol
 dftEnergies = np.array([  0.038,  5.507, 12.822, 3.400, -0.961, -0.659,
                          -0.258, -2.311, -3.360,-3.821, -4.211, -3.161,
@@ -48,7 +50,7 @@ for line in dataset:
 dataset.close()
 
 inters = len(data)
-intersPerConfig = inters/configs
+intersPerConfig = int(inters/configs)
 
 distances = np.zeros((inters,2))
 for i in range(inters):
@@ -90,8 +92,44 @@ print(lossFunction)
 
 # Stochastic gradient descent
 
+randomConfig = np.random.randint(configs)
 
+interactionGradient = np.zeros((intersPerConfig))
+for i in range(intersPerConfig):
+    tempIndex = i + intersPerConfig*randomConfig
+    interactionType = int(distances[tempIndex][0])
+    if interactionType == 0:
+        interactionGradient[i] = derivativeMorseD(parameters[0][1],
+                                                    parameters[0][2],
+                                                    distances[tempIndex][1])
 
+lossFunctionGradient = -2.0*(dftEnergies[randomConfig] - energies[randomConfig])*np.sum(interactionGradient)
+print(randomConfig,lossFunctionGradient)
+
+print(parameters[0][0])
+parameters[0][0] = parameters[0][0] - learningRate*lossFunctionGradient
+print(parameters[0][0])
+
+interactionEnergy = np.zeros((inters))
+for i in range(inters):
+    interactionType = int(distances[i][0])
+    interactionEnergy[i] = morse(parameters[interactionType][0],
+                                 parameters[interactionType][1],
+                                 parameters[interactionType][2],
+                                 distances[i][1])
+
+energies = np.zeros((configs))
+for i in range(configs):
+    lowerIndex = int(i*intersPerConfig)
+    upperIndex = int(lowerIndex + intersPerConfig)
+    energies[i] = np.sum(interactionEnergy[lowerIndex:upperIndex])
+                       
+configErrorFunction = np.square((energies - dftEnergies)/energyWeight)
+errorFunction = np.sum(configErrorFunction)
+
+lossFunction = np.sum(np.square(dftEnergies - energies))/configs
+print("Final loss function")
+print(lossFunction)
 exit()
 
 oldErrorFunction = errorFunction
