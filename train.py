@@ -75,7 +75,7 @@ configs = 13
 optimizerNumberOfSteps = 5000
 energyWeight = 0.1  # the lower the value the more strict you want to be in fit                                
 
-learningRate = 0.01
+learningRate = 0.001
 numberOfEpochs = 1000
 
 # energies must be in kcal/mol
@@ -133,25 +133,30 @@ for epoch in range(numberOfEpochs):
     if any(newParameters[:][1] <= 0.0):
         print("epoch skipped due to unphysical r0: negative or zero")
         continue
-    #if any(newParameters[:][1] > 8.0):
-    #    print("epoch skipped due to very large r0, > 8.0")
-    #    continue
     if any(newParameters[:][2] < 0.0):
         print("epoch skipped due to negative gamma")
-        continue
-    if any(newParameters[:][2] > 20.0):
-        print("epoch skipped due to very large gamma")
         continue
     
     parameters = newParameters
     energies = getEnergies(configs,parameters,distances)
 
+    oldLossFunction = lossFunction
     lossFunction = np.sum(np.square(dftEnergies - energies))/configs
     print("Current loss function {}".format(lossFunction))
+
+    if lossFunction < oldLossFunction:
+        bestLossFunction = lossFunction
+        bestParameters = parameters
+        bestEnergies = energies
 
 print(parameters)
 print(energies)
 print(lossFunction)
+
+print("---------------")
+print(bestParameters)
+print(bestEnergies)
+print(bestLossFunction)
 exit()
 
 oldErrorFunction = errorFunction
