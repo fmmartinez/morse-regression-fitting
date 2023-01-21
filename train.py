@@ -26,6 +26,25 @@ def derivativeMorseGamma(D,r0,gamma,r):
 def derivativeMorseR0(D,r0,gamma,r):
     chi = np.exp(-gamma/2*((r/r0)-1))
     derivativeEnergy = (D*gamma*r/r0**2)*(chi**2 - chi)
+    return derivativeEnergy
+
+def getEnergies(configs,parameters,distances):
+    numberOfInteractions = distances.shape[0]
+    interactionEnergy = np.zeros((numberOfInteractions))
+    for i in range(numberOfInteractions):
+        interactionType = int(distances[i][0])
+        interactionEnergy[i] = morse(parameters[interactionType][0],
+                                    parameters[interactionType][1],
+                                    parameters[interactionType][2],
+                                    distances[i][1])
+
+    energies = np.zeros((configs))
+    intersPerConfig = (numberOfInteractions/configs)
+    for i in range(configs):
+        lowerIndex = int(i*intersPerConfig)
+        upperIndex = int(lowerIndex + intersPerConfig)
+        energies[i] = np.sum(interactionEnergy[lowerIndex:upperIndex])
+    return energies
 
 dataset = open("dataset.txt","r")
 
@@ -69,19 +88,7 @@ parameters[2][0:3] = [0.338,4.476,13.789]
 parameters[3][0:3] = [2.500,2.416,11.648]
 parameters[4][0:3] = [1.364,3.054,9.830]
 
-interactionEnergy = np.zeros((inters))
-for i in range(inters):
-    interactionType = int(distances[i][0])
-    interactionEnergy[i] = morse(parameters[interactionType][0],
-                                 parameters[interactionType][1],
-                                 parameters[interactionType][2],
-                                 distances[i][1])
-
-energies = np.zeros((configs))
-for i in range(configs):
-    lowerIndex = int(i*intersPerConfig)
-    upperIndex = int(lowerIndex + intersPerConfig)
-    energies[i] = np.sum(interactionEnergy[lowerIndex:upperIndex])
+energies = getEnergies(configs,parameters,distances)
                        
 configErrorFunction = np.square((energies - dftEnergies)/energyWeight)
 errorFunction = np.sum(configErrorFunction)
@@ -106,23 +113,11 @@ for i in range(intersPerConfig):
 lossFunctionGradient = -2.0*(dftEnergies[randomConfig] - energies[randomConfig])*np.sum(interactionGradient)
 print(randomConfig,lossFunctionGradient)
 
-print(parameters[0][0])
+
 parameters[0][0] = parameters[0][0] - learningRate*lossFunctionGradient
 print(parameters[0][0])
 
-interactionEnergy = np.zeros((inters))
-for i in range(inters):
-    interactionType = int(distances[i][0])
-    interactionEnergy[i] = morse(parameters[interactionType][0],
-                                 parameters[interactionType][1],
-                                 parameters[interactionType][2],
-                                 distances[i][1])
-
-energies = np.zeros((configs))
-for i in range(configs):
-    lowerIndex = int(i*intersPerConfig)
-    upperIndex = int(lowerIndex + intersPerConfig)
-    energies[i] = np.sum(interactionEnergy[lowerIndex:upperIndex])
+energies = getEnergies(configs,parameters,distances)
                        
 configErrorFunction = np.square((energies - dftEnergies)/energyWeight)
 errorFunction = np.sum(configErrorFunction)
@@ -130,6 +125,7 @@ errorFunction = np.sum(configErrorFunction)
 lossFunction = np.sum(np.square(dftEnergies - energies))/configs
 print("Final loss function")
 print(lossFunction)
+
 exit()
 
 oldErrorFunction = errorFunction
