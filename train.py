@@ -75,7 +75,7 @@ configs = 13
 optimizerNumberOfSteps = 5000
 energyWeight = 0.1  # the lower the value the more strict you want to be in fit                                
 
-learningRate = 0.001
+learningRate = 0.0015
 numberOfEpochs = 10
 
 # energies must be in kcal/mol
@@ -127,7 +127,7 @@ for epoch in range(numberOfEpochs):
 
     for interactionType in range(5):
         for parameterType in range(3):
-            lossFunctionGradient = -2.0*(dftEnergies[randomConfig] - energies[randomConfig])*getEnergyGradients(0,0,parameters,configDistances)
+            lossFunctionGradient = -2.0*(dftEnergies[randomConfig] - energies[randomConfig])*getEnergyGradients(interactionType,parameterType,parameters,configDistances)
             parameters[interactionType][parameterType] = parameters[interactionType][parameterType] - learningRate*lossFunctionGradient
 
     energies = getEnergies(configs,parameters,distances)
@@ -138,6 +138,8 @@ for epoch in range(numberOfEpochs):
     lossFunction = np.sum(np.square(dftEnergies - energies))/configs
     print("Final loss function {}".format(lossFunction))
 
+print(parameters)
+print(energies)
 exit()
 
 oldErrorFunction = errorFunction
