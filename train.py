@@ -75,8 +75,8 @@ configs = 13
 optimizerNumberOfSteps = 5000
 energyWeight = 0.1  # the lower the value the more strict you want to be in fit                                
 
-learningRate = 0.0015
-numberOfEpochs = 10
+learningRate = 0.01
+numberOfEpochs = 1000
 
 # energies must be in kcal/mol
 dftEnergies = np.array([  0.038,  5.507, 12.822, 3.400, -0.961, -0.659,
@@ -113,33 +113,45 @@ parameters[4][0:3] = [1.364,3.054,9.830]
 
 energies = getEnergies(configs,parameters,distances)
                        
-configErrorFunction = np.square((energies - dftEnergies)/energyWeight)
-errorFunction = np.sum(configErrorFunction)
-
 lossFunction = np.sum(np.square(dftEnergies - energies))/configs
 print("Initial loss function {}".format(lossFunction))
 
 # Stochastic gradient descent
-
+lossFunctionGradient = np.zeros((5,3))
 for epoch in range(numberOfEpochs):
     randomConfig = np.random.randint(configs)
     configDistances = distances[intersPerConfig*randomConfig:intersPerConfig*(1+randomConfig)][:]
 
     for interactionType in range(5):
         for parameterType in range(3):
-            lossFunctionGradient = -2.0*(dftEnergies[randomConfig] - energies[randomConfig])*getEnergyGradients(interactionType,parameterType,parameters,configDistances)
-            parameters[interactionType][parameterType] = parameters[interactionType][parameterType] - learningRate*lossFunctionGradient
+            energyGradients = getEnergyGradients(interactionType,parameterType,parameters,configDistances)
+            lossFunctionGradient[interactionType][parameterType] = -2.0*(dftEnergies[randomConfig] - energies[randomConfig])*energyGradients
 
+    newParameters = parameters - learningRate*lossFunctionGradient
+
+    #physical constraints
+    if any(newParameters[:][1] <= 0.0):
+        print("epoch skipped due to unphysical r0: negative or zero")
+        continue
+    #if any(newParameters[:][1] > 8.0):
+    #    print("epoch skipped due to very large r0, > 8.0")
+    #    continue
+    if any(newParameters[:][2] < 0.0):
+        print("epoch skipped due to negative gamma")
+        continue
+    if any(newParameters[:][2] > 20.0):
+        print("epoch skipped due to very large gamma")
+        continue
+    
+    parameters = newParameters
     energies = getEnergies(configs,parameters,distances)
-                        
-    configErrorFunction = np.square((energies - dftEnergies)/energyWeight)
-    errorFunction = np.sum(configErrorFunction)
 
     lossFunction = np.sum(np.square(dftEnergies - energies))/configs
-    print("Final loss function {}".format(lossFunction))
+    print("Current loss function {}".format(lossFunction))
 
 print(parameters)
 print(energies)
+print(lossFunction)
 exit()
 
 oldErrorFunction = errorFunction
