@@ -20,7 +20,7 @@ def derivativeMorseD(r0,gamma,r):
 
 def derivativeMorseGamma(D,r0,gamma,r):
     chi = np.exp(-gamma/2*((r/r0)-1))
-    derivativeEnergy = D*((r/r0)-1)*(chi-chi**2)
+    derivativeEnergy = D*((r/r0)-1)*(chi - chi**2)
     return derivativeEnergy
 
 def derivativeMorseR0(D,r0,gamma,r):
@@ -70,10 +70,7 @@ def getEnergyGradients(interactionType,parameterType,parameters,distances):
 
 dataset = open("dataset.txt","r")
 
-configs = 13
-
-optimizerNumberOfSteps = 5000
-energyWeight = 0.1  # the lower the value the more strict you want to be in fit                                
+configs = 13                             
 
 learningRate = 0.001
 numberOfEpochs = 1000
@@ -105,11 +102,11 @@ parameters = np.zeros((5,3))
 
 #Initial guess
 #parameters[interactionType][0:3], 0 = D, 1 = r0, 2 = gamma
-parameters[0][0:3] = [1.364,3.054,9.830]
+parameters[0][0:3] = [1.364,3.054, 9.830]
 parameters[1][0:3] = [0.338,4.476,13.789]
 parameters[2][0:3] = [0.338,4.476,13.789]
 parameters[3][0:3] = [2.500,2.416,11.648]
-parameters[4][0:3] = [1.364,3.054,9.830]
+parameters[4][0:3] = [1.364,3.054, 9.830]
 
 energies = getEnergies(configs,parameters,distances)
                        
